@@ -28,7 +28,7 @@ export function App() {
     <div className="wrap">
       <header>
         <div className="brand">
-          <span className="logo">◆</span> DreamDEX <b>Bot Builder</b>
+          <span className="logo">◆</span> dreamBot <b>Builder</b>
         </div>
         <div className="tag">Pick a strategy, tune it, deploy. No coding.</div>
       </header>

@@ -1,4 +1,4 @@
-# DreamDEX Bot Builder
+# dreamBot Builder
 
 A no-code web wizard that configures a DreamDEX trading bot for you: pick a
 strategy, tune it with sliders, and get a ready-to-run config plus a one-click
