@@ -3,6 +3,7 @@ import { STRATEGIES, type Strategy, type Param } from "./strategies";
 
 const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
 const DISCLAIMER_URL = `${KIT_REPO}/blob/main/DISCLAIMER.md`;
+const LEADERBOARD_URL = "https://leaderboard.dreamdex.io/";
 const STEPS = ["Strategy", "Network", "Tune", "Deploy"];
 
 export function App() {
@@ -33,6 +34,13 @@ export function App() {
         </div>
         <div className="tag">Pick a strategy, tune it, deploy. No coding.</div>
       </header>
+
+      <a className="arena" href={LEADERBOARD_URL} target="_blank" rel="noreferrer">
+        <span className="arena-l">
+          🏟️ <b>Competing in Algo Arena?</b> Register your wallet on the leaderboard so your bot's volume counts.
+        </span>
+        <span className="arena-cta">Join Algo Arena →</span>
+      </a>
 
       <div className="safebar">
         🔒 Non-custodial: your private key <b>never touches this site</b>. You add it yourself, on your own machine or cloud.

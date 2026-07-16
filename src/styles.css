@@ -39,6 +39,22 @@ header { text-align: center; margin-bottom: 18px; }
 .logo { color: var(--accent); margin-right: 6px; }
 .tag { color: var(--muted); margin-top: 5px; font-size: 14.5px; }
 
+.arena {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  background: linear-gradient(90deg, rgba(119, 27, 232, 0.22), rgba(204, 102, 255, 0.10));
+  border: 1px solid rgba(119, 27, 232, 0.5);
+  border-radius: var(--radius);
+  padding: 12px 15px;
+  margin-bottom: 12px;
+  text-decoration: none;
+  color: var(--body);
+  font-size: 13.5px;
+  transition: border-color .15s, background .15s;
+}
+.arena:hover { border-color: var(--accent2); background: linear-gradient(90deg, rgba(119, 27, 232, 0.3), rgba(204, 102, 255, 0.16)); }
+.arena b { color: var(--text); }
+.arena-cta { color: var(--accent2); font-weight: 700; white-space: nowrap; }
+
 .safebar {
   background: rgba(55, 211, 155, 0.08);
   border: 1px solid rgba(55, 211, 155, 0.22);
