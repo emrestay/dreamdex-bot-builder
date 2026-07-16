@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { STRATEGIES, type Strategy, type Param } from "./strategies";
 
 const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
+const DISCLAIMER_URL = `${KIT_REPO}/blob/main/DISCLAIMER.md`;
 const STEPS = ["Strategy", "Network", "Tune", "Deploy"];
 
 export function App() {
@@ -35,6 +36,14 @@ export function App() {
 
       <div className="safebar">
         🔒 Non-custodial: your private key <b>never touches this site</b>. You add it yourself, on your own machine or cloud.
+      </div>
+
+      <div className="legal">
+        <b>Not financial advice.</b> These are educational templates and guidelines. DreamDEX does not recommend any
+        strategy or parameters, does not manage your funds, and is not responsible for your results. Any strategy can
+        lose money, including total loss. You alone are responsible for the strategy you deploy, the parameters you
+        set, the keys you use, and the orders your bot places.{" "}
+        <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Read the full legal disclaimer →</a>
       </div>
 
       <Stepper step={step} />
@@ -77,7 +86,8 @@ export function App() {
       </main>
 
       <footer>
-        Built on the <a href={KIT_REPO} target="_blank" rel="noreferrer">DreamDEX Bot Kit</a>. Educational tooling, not financial advice.
+        Built on the <a href={KIT_REPO} target="_blank" rel="noreferrer">DreamDEX Bot Kit</a>. Educational tooling, not
+        financial advice. <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Legal disclaimer</a>.
       </footer>
     </div>
   );
@@ -142,7 +152,10 @@ function NetworkStep(props: {
           <button className={!dryRun ? "on danger" : ""} onClick={() => setDryRun(false)}>Live (sends real orders)</button>
         </div>
         {!dryRun && (
-          <div className="warn">⚠️ Live mode places real orders with real funds. Only after you've watched dry-run.</div>
+          <div className="warn">
+            ⚠️ Live mode places real orders with real funds, and you are solely responsible for any losses. Only go
+            live after you've watched dry-run and understand what the bot does.
+          </div>
         )}
         {network === "mainnet" && (
           <div className="warn">⚠️ Mainnet uses real value. Test on testnet first.</div>
@@ -280,6 +293,15 @@ function DeployStep(props: {
           <li>Add the values from your <code>.env</code> above (including <code>PRIVATE_KEY</code>) as the host's environment variables.</li>
           <li>Deploy, and watch the logs the same way you would locally.</li>
         </ol>
+      </div>
+
+      <div className="block legal-block">
+        <b>Before you go live.</b> This is educational tooling and a set of guidelines, <b>not financial advice</b> and
+        not a recommendation of any strategy or parameters. The templates are provided as is and are not audited. Any
+        strategy can lose money, including total loss. You are solely responsible for the strategy you deploy, the
+        parameters you set, the security of your keys, and every order your bot places. Test on testnet first, and only
+        trade what you can afford to lose.{" "}
+        <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Full legal disclaimer →</a>
       </div>
 
       <div className="block finish">

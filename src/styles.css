@@ -50,6 +50,23 @@ header { text-align: center; margin-bottom: 18px; }
 }
 .safebar b { color: var(--good); }
 
+.legal {
+  background: rgba(240, 180, 41, 0.06);
+  border: 1px solid rgba(240, 180, 41, 0.24);
+  color: #e4d3ae;
+  border-radius: var(--radius);
+  padding: 11px 15px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: -12px 0 24px;
+}
+.legal b { color: var(--warn); }
+.legal a { color: var(--warn); }
+
+.legal-block { background: rgba(240, 180, 41, 0.06); border-color: rgba(240, 180, 41, 0.24); color: #e4d3ae; font-size: 12.5px; line-height: 1.65; }
+.legal-block b { color: var(--warn); }
+.legal-block a { color: var(--warn); }
+
 .stepper { display: flex; gap: 8px; justify-content: center; margin-bottom: 26px; flex-wrap: wrap; }
 .pip { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); }
 .pip .num { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--panel3); font-size: 12px; color: var(--body); }
