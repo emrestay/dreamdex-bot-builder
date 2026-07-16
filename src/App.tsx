@@ -43,15 +43,8 @@ export function App() {
       </a>
 
       <div className="safebar">
-        🔒 Non-custodial: your private key <b>never touches this site</b>. You add it yourself, on your own machine or cloud.
-      </div>
-
-      <div className="legal">
-        <b>Not financial advice.</b> These are educational templates and guidelines. DreamDEX does not recommend any
-        strategy or parameters, does not manage your funds, and is not responsible for your results. Any strategy can
-        lose money, including total loss. You alone are responsible for the strategy you deploy, the parameters you
-        set, the keys you use, and the orders your bot places.{" "}
-        <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Read the full legal disclaimer →</a>
+        🔒 Your key <b>never touches this site</b>. Not financial advice, you trade at your own risk.{" "}
+        <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Disclaimer</a>
       </div>
 
       <Stepper step={step} />
@@ -118,7 +111,7 @@ function StrategyStep({ onPick, activeId }: { onPick: (s: Strategy) => void; act
   return (
     <section>
       <h2>Choose a strategy</h2>
-      <p className="sub">New here? Start with <b>Starter</b> or <b>Market Maker</b>.</p>
+      <p className="sub">New here? Start with <b>Starter</b>.</p>
       <div className="cards">
         {STRATEGIES.map((s) => (
           <button key={s.id} className={"card " + (activeId === s.id ? "sel" : "")} onClick={() => onPick(s)}>
@@ -143,7 +136,7 @@ function NetworkStep(props: {
   return (
     <section>
       <h2>Network &amp; safety</h2>
-      <p className="sub">Always start on testnet with dry-run on. Bugs are free on testnet, expensive on mainnet.</p>
+      <p className="sub">Start on testnet with dry-run on.</p>
 
       <div className="field">
         <label>Network</label>
@@ -190,7 +183,7 @@ function TuneStep(props: {
   return (
     <section>
       <h2>Tune {strat.name}</h2>
-      <p className="sub">Sensible defaults are filled in. Change what you like.</p>
+      <p className="sub">Defaults are filled in. Change what you like.</p>
 
       <div className="grid">
         {basic.map((p) => <Field key={p.env} p={p} value={values[p.env]} onChange={(v) => setVal(p.env, v)} />)}
@@ -266,7 +259,7 @@ function DeployStep(props: {
   return (
     <section>
       <h2>Your bot is ready</h2>
-      <p className="sub">Two ways to run it. Either way, <b>your key stays with you</b>.</p>
+      <p className="sub">Two ways to run it. Your key stays with you.</p>
 
       <div className="block">
         <div className="block-head">

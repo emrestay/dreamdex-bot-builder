@@ -27,7 +27,7 @@ export const STRATEGIES: Strategy[] = [
   {
     id: "starter",
     name: "Starter",
-    blurb: "The simplest bot. A two-sided quote you can grow into your own strategy. Best first pick.",
+    blurb: "Quotes both sides. Edit one function to make it yours.",
     symbolEnv: "SYMBOL",
     params: [
       { env: "SYMBOL", label: "Market", def: "SOMI:USDso", type: "select", options: MARKETS },
@@ -39,7 +39,7 @@ export const STRATEGIES: Strategy[] = [
   {
     id: "market-making",
     name: "Market Maker",
-    blurb: "Rest buy and sell quotes and earn the spread. The classic low-risk way to generate volume.",
+    blurb: "Rest quotes on both sides, earn the spread.",
     symbolEnv: "MM_SYMBOL",
     params: [
       { env: "MM_SYMBOL", label: "Market", def: "SOMI:USDso", type: "select", options: MARKETS },
@@ -56,7 +56,7 @@ export const STRATEGIES: Strategy[] = [
   {
     id: "grid",
     name: "Grid",
-    blurb: "A ladder of orders that profits from the market bouncing inside a range.",
+    blurb: "A ladder of orders for a ranging market.",
     symbolEnv: "GRID_SYMBOL",
     params: [
       { env: "GRID_SYMBOL", label: "Market", def: "SOMI:USDso", type: "select", options: MARKETS },
@@ -72,7 +72,7 @@ export const STRATEGIES: Strategy[] = [
   {
     id: "momentum",
     name: "Momentum",
-    blurb: "Follow the trend: buy strength, sell weakness, with take-profit and stop-loss.",
+    blurb: "Follow the trend, with take-profit and stop-loss.",
     symbolEnv: "MOM_SYMBOL",
     params: [
       { env: "MOM_SYMBOL", label: "Market", def: "WETH:USDso", type: "select", options: MARKETS },
@@ -89,7 +89,7 @@ export const STRATEGIES: Strategy[] = [
   {
     id: "mean-reversion",
     name: "Mean Reversion",
-    blurb: "Bet the price snaps back to average, using RSI and Bollinger Bands.",
+    blurb: "Bet the price snaps back to average.",
     symbolEnv: "MR_SYMBOL",
     params: [
       { env: "MR_SYMBOL", label: "Market", def: "WETH:USDso", type: "select", options: MARKETS },
@@ -109,7 +109,7 @@ export const STRATEGIES: Strategy[] = [
   {
     id: "twap",
     name: "TWAP",
-    blurb: "Execution algo: spread one big order into slices over time to reduce impact.",
+    blurb: "Split one big order into slices over time.",
     symbolEnv: "TWAP_SYMBOL",
     params: [
       { env: "TWAP_SYMBOL", label: "Market", def: "SOMI:USDso", type: "select", options: MARKETS },
