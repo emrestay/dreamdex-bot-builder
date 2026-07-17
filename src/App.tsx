@@ -4,6 +4,7 @@ import { STRATEGIES, type Strategy, type Param } from "./strategies";
 const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
 const DISCLAIMER_URL = `${KIT_REPO}/blob/main/DISCLAIMER.md`;
 const LEADERBOARD_URL = "https://leaderboard.dreamdex.io/";
+const EXPORT_KEY_URL = "https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/";
 const STEPS = ["Strategy", "Network", "Tune", "Deploy"];
 
 export function App() {
@@ -240,6 +241,8 @@ function DeployStep(props: {
       "",
       `NETWORK=${network}`,
       `DRY_RUN=${dryRun}`,
+      "# Must start with 0x. MetaMask exports the key without it, so add it yourself:",
+      "#   PRIVATE_KEY=0xabc123...   (how to export: " + EXPORT_KEY_URL + ")",
       "PRIVATE_KEY=",
       "",
       ...strat.params.map((p) => `${p.env}=${values[p.env]}`),
@@ -270,7 +273,11 @@ function DeployStep(props: {
           </div>
         </div>
         <pre>{envFile}</pre>
-        <div className="note">You add <code>PRIVATE_KEY</code> yourself. This site never sees it. Use a dedicated bot wallet.</div>
+        <div className="note">
+          You add <code>PRIVATE_KEY</code> yourself. This site never sees it. Use a dedicated bot wallet.<br />
+          Exporting from MetaMask? It gives you the key <b>without</b> <code>0x</code> — add it in front.{" "}
+          <a href={EXPORT_KEY_URL} target="_blank" rel="noreferrer">How to export your key →</a>
+        </div>
       </div>
 
       <div className="block">
