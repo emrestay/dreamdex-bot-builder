@@ -272,9 +272,10 @@ function DeployStep(props: {
         </div>
         <pre>{envFile}</pre>
         <div className="note">
-          You add <code>PRIVATE_KEY</code> yourself. This site never sees it. Use a dedicated bot wallet.<br />
-          Exporting from MetaMask? It gives you the key <b>without</b> <code>0x</code> — add it in front.{" "}
-          <a href={EXPORT_KEY_URL} target="_blank" rel="noreferrer">How to export your key →</a>
+          You add <code>PRIVATE_KEY</code> yourself, and it <b>must start with 0x</b>, like{" "}
+          <code>PRIVATE_KEY=0xabc123...</code>. MetaMask gives you the key without the <code>0x</code>, so type it in
+          front yourself. <a href={EXPORT_KEY_URL} target="_blank" rel="noreferrer">How to export your key →</a><br />
+          This site never sees your key. Use a dedicated bot wallet.
         </div>
       </div>
 
