@@ -241,8 +241,6 @@ function DeployStep(props: {
       "",
       `NETWORK=${network}`,
       `DRY_RUN=${dryRun}`,
-      "# Must start with 0x. MetaMask exports the key without it, so add it yourself:",
-      "#   PRIVATE_KEY=0xabc123...   (how to export: " + EXPORT_KEY_URL + ")",
       "PRIVATE_KEY=",
       "",
       ...strat.params.map((p) => `${p.env}=${values[p.env]}`),
