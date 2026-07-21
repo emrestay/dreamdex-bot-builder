@@ -19,6 +19,10 @@ machine or your own cloud. The bot runs on your infrastructure, not ours.
 The generated `.env` drops straight into the bot kit — the parameter names and
 defaults mirror `strategies/*/src/config.ts` exactly.
 
+**Integrating this into a page?** See [FLOW.md](FLOW.md) for the full logic map:
+the wizard flow, every strategy's parameters (basic vs advanced), and exactly
+what config the choices produce.
+
 ## Run locally
 
 ```bash
