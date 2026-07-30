@@ -243,7 +243,7 @@ function DeployStep(props: {
       `NETWORK=${network}`,
       `DRY_RUN=${dryRun}`,
       `STRATEGY=${strat.id}`,
-      "PRIVATE_KEY=",
+      "PRIVATE_KEY=0x...",
       "",
       ...strat.params.map((p) => `${p.env}=${values[p.env]}`),
       "",
@@ -274,7 +274,7 @@ function DeployStep(props: {
         </div>
         <pre>{envFile}</pre>
         <div className="note">
-          You add <code>PRIVATE_KEY</code> yourself, and it <b>must start with 0x</b>, like{" "}
+          Replace the <code>0x...</code> placeholder with your own key — it <b>must start with 0x</b>, like{" "}
           <code>PRIVATE_KEY=0xabc123...</code>. MetaMask gives you the key without the <code>0x</code>, so type it in
           front yourself. <a href={EXPORT_KEY_URL} target="_blank" rel="noreferrer">How to export your key →</a><br />
           This site never sees your key. Use a dedicated bot wallet.
@@ -304,7 +304,7 @@ function DeployStep(props: {
         <ol className="steps">
           <li>Click <b>Deploy on Railway</b> above.</li>
           <li>In the Railway service, open <code>Variables → RAW Editor</code> and paste your <code>.env</code> block from above.</li>
-          <li>Fill in the blank <code>PRIVATE_KEY=</code> line with your own key (starts with <code>0x</code>), then deploy.</li>
+          <li>On the <code>PRIVATE_KEY=0x...</code> line, replace <code>0x...</code> with your own key — keep the <code>0x</code> prefix — then deploy.</li>
         </ol>
         <div className="note">
           The service may show a <b>“crashed”</b> status until you paste your config — that's expected. It starts
