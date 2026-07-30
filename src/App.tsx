@@ -282,19 +282,11 @@ function DeployStep(props: {
       </div>
 
       <div className="block">
-        <div className="block-head">
-          <span>2 · Run it — Option A: on your machine</span>
-          <CopyBtn text={commands} />
-        </div>
-        <pre>{commands}</pre>
-        <div className="note">An AI coding agent (Claude Code, Cursor) can run these steps for you.</div>
-      </div>
-
-      <div className="block">
-        <div className="block-head"><span>2 · Run it — Option B: 24/7 on Railway (one click)</span></div>
+        <div className="block-head"><span>2 · Run it — Option A: 24/7 on Railway (easiest)</span></div>
         <p className="note" style={{ marginTop: 0 }}>
           Keep it running around the clock without your laptop on. No server setup — deploy the kit's Railway
-          template, paste your config, and add your key.
+          template, paste your config, and add your key. Railway's free credit covers light use; a bot running
+          24/7 may cost a few dollars after that.
         </p>
         <p style={{ margin: "8px 0" }}>
           <a href={RAILWAY_TEMPLATE} target="_blank" rel="noreferrer">
@@ -315,6 +307,15 @@ function DeployStep(props: {
           set the start command to <code>npm install &amp;&amp; npm start -w {strat.id}</code>, and add the same
           <code>.env</code> values as environment variables.
         </div>
+      </div>
+
+      <div className="block">
+        <div className="block-head">
+          <span>2 · Run it — Option B: on your machine (free)</span>
+          <CopyBtn text={commands} />
+        </div>
+        <pre>{commands}</pre>
+        <div className="note">An AI coding agent (Claude Code, Cursor) can run these steps for you.</div>
       </div>
 
       <div className="block legal-block">
