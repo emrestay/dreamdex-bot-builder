@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { STRATEGIES, type Strategy, type Param } from "./strategies";
 
 const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
+const RAILWAY_TEMPLATE = "https://railway.com/deploy/pE6EIF";
 const DISCLAIMER_URL = `${KIT_REPO}/blob/main/DISCLAIMER.md`;
 const LEADERBOARD_URL = "https://leaderboard.dreamdex.io/";
 const EXPORT_KEY_URL = "https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/";
@@ -241,6 +242,7 @@ function DeployStep(props: {
       "",
       `NETWORK=${network}`,
       `DRY_RUN=${dryRun}`,
+      `STRATEGY=${strat.id}`,
       "PRIVATE_KEY=",
       "",
       ...strat.params.map((p) => `${p.env}=${values[p.env]}`),
@@ -289,17 +291,30 @@ function DeployStep(props: {
       </div>
 
       <div className="block">
-        <div className="block-head"><span>2 · Run it — Option B: 24/7 in the cloud</span></div>
+        <div className="block-head"><span>2 · Run it — Option B: 24/7 on Railway (one click)</span></div>
         <p className="note" style={{ marginTop: 0 }}>
-          Keep it running around the clock without your laptop on, using any always-on host you control
-          (a small VPS, or a platform like Railway or Render). It's still your box and your key.
+          Keep it running around the clock without your laptop on. No server setup — deploy the kit's Railway
+          template, paste your config, and add your key.
+        </p>
+        <p style={{ margin: "8px 0" }}>
+          <a href={RAILWAY_TEMPLATE} target="_blank" rel="noreferrer">
+            <img src="https://railway.com/button.svg" alt="Deploy on Railway" height={32} />
+          </a>
         </p>
         <ol className="steps">
-          <li>Create a project from the kit repo: <code>{KIT_REPO.replace("https://", "")}</code></li>
-          <li>Set the start command to <code>npm install &amp;&amp; npm start -w {strat.id}</code></li>
-          <li>Add the values from your <code>.env</code> above (including <code>PRIVATE_KEY</code>) as the host's environment variables.</li>
-          <li>Deploy, and watch the logs the same way you would locally.</li>
+          <li>Click <b>Deploy on Railway</b> above.</li>
+          <li>In the Railway service, open <code>Variables → RAW Editor</code> and paste your <code>.env</code> block from above.</li>
+          <li>Fill in the blank <code>PRIVATE_KEY=</code> line with your own key (starts with <code>0x</code>), then deploy.</li>
         </ol>
+        <div className="note">
+          The service may show a <b>“crashed”</b> status until you paste your config — that's expected. It starts
+          as soon as your variables are set.
+        </div>
+        <div className="note">
+          Prefer another always-on host (a VPS, Render)? Point it at <code>{KIT_REPO.replace("https://", "")}</code>,
+          set the start command to <code>npm install &amp;&amp; npm start -w {strat.id}</code>, and add the same
+          <code>.env</code> values as environment variables.
+        </div>
       </div>
 
       <div className="block legal-block">
