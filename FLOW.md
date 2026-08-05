@@ -185,6 +185,13 @@ Three advisors vote on each trade (momentum, mean reversion, grid). Vote-only: t
 | `MSA_LOOP_MS` | Cycle interval (ms) | `60000` | advanced |
 | `MSA_CROSS_BPS` | Cross-through (bps) | `8` | advanced |
 | `MSA_WINDOW_SIZE` | Lookback window | `40` | advanced |
+| `MSA_MOM_ENTRY` | Momentum entry | `0.008` | advanced |
+| `MSA_MOM_STRONG` | Strong momentum | `0.01` | advanced |
+| `MSA_RSI_PERIOD` | RSI period | `14` | advanced |
+| `MSA_BB_PERIOD` | Bollinger period | `20` | advanced |
+| `MSA_BB_MULT` | Bollinger multiplier | `2` | advanced |
+| `MSA_RSI_OVERSOLD` | RSI oversold | `30` | advanced |
+| `MSA_RSI_OVERBOUGHT` | RSI overbought | `70` | advanced |
 
 ## Example: full input → output
 
