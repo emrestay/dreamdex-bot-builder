@@ -17,8 +17,9 @@ flowchart TD
   B --> S4[Momentum]
   B --> S5[Mean Reversion]
   B --> S6[TWAP]
+  B --> S7[Ensemble]
 
-  S1 & S2 & S3 & S4 & S5 & S6 --> N[2 · Network & safety]
+  S1 & S2 & S3 & S4 & S5 & S6 & S7 --> N[2 · Network & safety]
   N --> N1{Network}
   N1 -->|testnet| N2{Mode}
   N1 -->|mainnet - warning| N2
@@ -39,14 +40,16 @@ flowchart TD
 
 | Step | What the user does | What it sets |
 | --- | --- | --- |
-| **1 · Strategy** | Picks one of 6 strategies | Chooses the whole parameter set + the `npm run dev -w <id>` target |
+| **1 · Strategy** | Picks one of 7 strategies | Chooses the whole parameter set + the `npm run dev -w <id>` target |
 | **2 · Network & safety** | testnet/mainnet, dry-run/live | `NETWORK`, `DRY_RUN` (defaults: `testnet`, `true`) |
 | **3 · Tune** | Adjusts values (basic always shown, advanced behind a toggle) | Every parameter's value |
 | **4 · Deploy** | Copies the config + run steps | The final `.env` and the run command |
 
 **Key rule:** the generated `.env` always contains **every** parameter (basic
 **and** advanced), at its default unless the user changed it. "Advanced" only
-hides fields in the UI — it does not remove them from the output.
+hides fields in the UI — it does not remove them from the output. Some strategies
+also emit fixed `envDefaults` (e.g. Ensemble always writes `FEATURES_AI=false`)
+that never appear in Tune.
 
 ## Output contract (what the site produces)
 
@@ -163,6 +166,32 @@ Split one big order into slices over time.
 | `TWAP_SLICES` | Number of slices | `5` | basic |
 | `TWAP_INTERVAL_SEC` | Seconds between slices | `30` | basic |
 | `TWAP_MAX_SLIPPAGE_BPS` | Max slippage (bps) | `15` | advanced |
+
+### Ensemble · `npm run dev -w ensemble`
+Three advisors vote on each trade (momentum, mean reversion, grid). Vote-only: the builder always emits `FEATURES_AI=false` (not shown in Tune). Optional LLM / `OPENAI_*` stay kit-repo-only.
+
+| Param (env) | Label | Default | Tier |
+| --- | --- | --- | --- |
+| `SYMBOL` | Market | `WETH:USDso` | basic |
+| `MSA_NOTIONAL_USDSO` | Position size (USDso) | `25` | basic |
+| `MSA_TAKE_PROFIT_PCT` | Take profit | `0.012` | basic |
+| `MSA_STOP_LOSS_PCT` | Stop loss | `0.01` | basic |
+| `MSA_MAX_RISK_PERCENT` | Max risk per trade | `0.15` | basic |
+| `MSA_MAX_LOSS_PERCENT` | Halt after loss | `0.5` | basic |
+| `FEATURES_MOMENTUM` | Momentum advisor | `true` | basic |
+| `FEATURES_MEAN_REVERSION` | Mean reversion advisor | `true` | basic |
+| `FEATURES_GRID` | Grid advisor | `true` | basic |
+| `FEATURES_AI` | *(fixed in `.env`)* | `false` | not shown |
+| `MSA_LOOP_MS` | Cycle interval (ms) | `60000` | advanced |
+| `MSA_CROSS_BPS` | Cross-through (bps) | `8` | advanced |
+| `MSA_WINDOW_SIZE` | Lookback window | `40` | advanced |
+| `MSA_MOM_ENTRY` | Momentum entry | `0.008` | advanced |
+| `MSA_MOM_STRONG` | Strong momentum | `0.01` | advanced |
+| `MSA_RSI_PERIOD` | RSI period | `14` | advanced |
+| `MSA_BB_PERIOD` | Bollinger period | `20` | advanced |
+| `MSA_BB_MULT` | Bollinger multiplier | `2` | advanced |
+| `MSA_RSI_OVERSOLD` | RSI oversold | `30` | advanced |
+| `MSA_RSI_OVERBOUGHT` | RSI overbought | `70` | advanced |
 
 ## Example: full input → output
 

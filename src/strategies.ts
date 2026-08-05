@@ -12,12 +12,15 @@ export type Param = {
   advanced?: boolean;
 };
 
+export type EnvDefault = { env: string; def: string; after?: string };
+
 export type Strategy = {
   id: string; // workspace name, used in `npm run dev -w <id>`
   name: string;
   blurb: string;
   symbolEnv: string;
   params: Param[];
+  envDefaults?: EnvDefault[]; // emitted in .env but not shown in the tune UI
 };
 
 // Markets. USDC.e:USDso is mainnet-only; the rest exist on both networks.
@@ -119,5 +122,33 @@ export const STRATEGIES: Strategy[] = [
       { env: "TWAP_INTERVAL_SEC", label: "Seconds between slices", def: 30, type: "number" },
       { env: "TWAP_MAX_SLIPPAGE_BPS", label: "Max slippage (bps)", def: 15, type: "number", advanced: true },
     ],
+  },
+  {
+    id: "ensemble",
+    name: "Ensemble",
+    blurb: "Three advisors vote on each trade.",
+    symbolEnv: "SYMBOL",
+    params: [
+      { env: "SYMBOL", label: "Market", def: "WETH:USDso", type: "select", options: MARKETS },
+      { env: "MSA_NOTIONAL_USDSO", label: "Position size (USDso)", def: 25, type: "number", help: "Default order notional." },
+      { env: "MSA_TAKE_PROFIT_PCT", label: "Take profit", def: 0.012, type: "number", help: "0.012 = 1.2%." },
+      { env: "MSA_STOP_LOSS_PCT", label: "Stop loss", def: 0.01, type: "number", help: "0.01 = 1%." },
+      { env: "MSA_MAX_RISK_PERCENT", label: "Max risk per trade", def: 0.15, type: "number", help: "Fraction of free balance." },
+      { env: "MSA_MAX_LOSS_PERCENT", label: "Halt after loss", def: 0.5, type: "number", help: "Fraction of starting equity." },
+      { env: "FEATURES_MOMENTUM", label: "Momentum advisor", def: "true", type: "select", options: ["true", "false"], help: "Enable momentum signal." },
+      { env: "FEATURES_MEAN_REVERSION", label: "Mean reversion advisor", def: "true", type: "select", options: ["true", "false"], help: "Enable RSI+BB signal." },
+      { env: "FEATURES_GRID", label: "Grid advisor", def: "true", type: "select", options: ["true", "false"], help: "Enable range-position signal." },
+      { env: "MSA_LOOP_MS", label: "Cycle interval (ms)", def: 60000, type: "number", advanced: true },
+      { env: "MSA_CROSS_BPS", label: "Cross-through (bps)", def: 8, type: "number", advanced: true },
+      { env: "MSA_WINDOW_SIZE", label: "Lookback window", def: 40, type: "number", advanced: true },
+      { env: "MSA_MOM_ENTRY", label: "Momentum entry", def: 0.008, type: "number", advanced: true },
+      { env: "MSA_MOM_STRONG", label: "Strong momentum", def: 0.01, type: "number", advanced: true },
+      { env: "MSA_RSI_PERIOD", label: "RSI period", def: 14, type: "number", advanced: true },
+      { env: "MSA_BB_PERIOD", label: "Bollinger period", def: 20, type: "number", advanced: true },
+      { env: "MSA_BB_MULT", label: "Bollinger multiplier", def: 2, type: "number", advanced: true },
+      { env: "MSA_RSI_OVERSOLD", label: "RSI oversold", def: 30, type: "number", advanced: true },
+      { env: "MSA_RSI_OVERBOUGHT", label: "RSI overbought", def: 70, type: "number", advanced: true },
+    ],
+    envDefaults: [{ env: "FEATURES_AI", def: "false", after: "FEATURES_GRID" }],
   },
 ];
