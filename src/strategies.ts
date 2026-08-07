@@ -14,7 +14,10 @@ export type Param = {
 
 export type EnvDefault = { env: string; def: string; after?: string };
 
+export type Kind = "spot" | "ec";
+
 export type Strategy = {
+  kind: Kind;
   id: string; // workspace name, used in `npm run dev -w <id>`
   name: string;
   blurb: string;
@@ -26,8 +29,21 @@ export type Strategy = {
 // Markets. USDC.e:USDso is mainnet-only; the rest exist on both networks.
 export const MARKETS = ["SOMI:USDso", "WETH:USDso", "WBTC:USDso", "USDC.e:USDso"];
 
+// Event contracts are scoped to a VENUE, not a trading pair. One deployment
+// hosts several and the bots refuse to guess, so the generated .env carries the
+// id for the network you picked. These have moved before: if a bot reports no
+// markets, read venueId off a live market row.
+export const EC_VENUE: Record<"testnet" | "mainnet", string> = {
+  testnet: "0x679795a0195a1b76cdebb7c51d74e058aee92919b8c3389af86ef24535e8a28c",
+  mainnet: "0x458b30c2d72bfd2c6317304a4594ecbafe5f729d3111b65fdc3a33bd48e5432d",
+};
+
+// Which underlying to follow. Empty means "whatever the venue is running".
+const UNDERLYINGS = ["", "BTC", "ETH"];
+
 export const STRATEGIES: Strategy[] = [
   {
+    kind: "spot",
     id: "starter",
     name: "Starter",
     blurb: "Quotes both sides. Edit one function to make it yours.",
@@ -40,6 +56,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    kind: "spot",
     id: "market-making",
     name: "Market Maker",
     blurb: "Rest quotes on both sides, earn the spread.",
@@ -57,6 +74,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    kind: "spot",
     id: "grid",
     name: "Grid",
     blurb: "A ladder of orders for a ranging market.",
@@ -73,6 +91,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    kind: "spot",
     id: "momentum",
     name: "Momentum",
     blurb: "Follow the trend, with take-profit and stop-loss.",
@@ -90,6 +109,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    kind: "spot",
     id: "mean-reversion",
     name: "Mean Reversion",
     blurb: "Bet the price snaps back to average.",
@@ -110,6 +130,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    kind: "spot",
     id: "twap",
     name: "TWAP",
     blurb: "Split one big order into slices over time.",
@@ -124,6 +145,7 @@ export const STRATEGIES: Strategy[] = [
     ],
   },
   {
+    kind: "spot",
     id: "ensemble",
     name: "Ensemble",
     blurb: "Three advisors vote on each trade.",
@@ -150,5 +172,78 @@ export const STRATEGIES: Strategy[] = [
       { env: "MSA_RSI_OVERBOUGHT", label: "RSI overbought", def: 70, type: "number", advanced: true },
     ],
     envDefaults: [{ env: "FEATURES_AI", def: "false", after: "FEATURES_GRID" }],
+  },
+  // ── Event contracts ────────────────────────────────────────────────────────
+  // Binary Up/Down markets on BTC and ETH price. No trading pair to choose: a
+  // market is an underlying plus a window, and the venue decides which windows
+  // exist. Prices are probabilities in (0, 1), sizes are contracts.
+  {
+    kind: "ec",
+    id: "ec-starter",
+    name: "EC Starter",
+    blurb: "Crosses the spread on a live window. The simplest one to read.",
+    symbolEnv: "EC_UNDERLYING",
+    params: [
+      { env: "EC_UNDERLYING", label: "Underlying", def: "", type: "select", options: UNDERLYINGS, help: "Leave blank to trade whatever the venue is running." },
+      { env: "TAKE_MAX_SHARES", label: "Contracts per trade", def: 5, type: "number" },
+      { env: "TAKE_MAX_POSITION", label: "Max net position", def: 20, type: "number", help: "It stops leaning once it is this far one way." },
+      { env: "TAKE_INTERVAL_MS", label: "Trade every (ms)", def: 8000, type: "number", advanced: true },
+    ],
+  },
+  {
+    kind: "ec",
+    id: "ec-maker",
+    name: "EC Market Maker",
+    blurb: "Rests a bid and an ask around a fair probability.",
+    symbolEnv: "EC_UNDERLYING",
+    params: [
+      { env: "EC_UNDERLYING", label: "Underlying", def: "", type: "select", options: UNDERLYINGS, help: "Leave blank to quote whatever the venue is running." },
+      { env: "MM_SPREAD", label: "Half-spread", def: 0.02, type: "number", help: "In probability. 0.02 quotes 2 points either side of fair." },
+      { env: "MM_QUOTE_SIZE", label: "Contracts per side", def: 5, type: "number" },
+      { env: "MM_MAX_INVENTORY", label: "Max net position", def: 20, type: "number", help: "Past this it quotes only the side that unwinds." },
+      { env: "MM_REFRESH_MS", label: "Re-quote every (ms)", def: 10000, type: "number", advanced: true },
+    ],
+  },
+  {
+    kind: "ec",
+    id: "ec-passive",
+    name: "EC Passive Bid",
+    blurb: "One resting bid at your price. Never pays the spread.",
+    symbolEnv: "EC_UNDERLYING",
+    params: [
+      { env: "EC_UNDERLYING", label: "Underlying", def: "", type: "select", options: UNDERLYINGS },
+      { env: "EC_SIDE", label: "Side", def: "up", type: "select", options: ["up", "down"], help: "Which way you are betting." },
+      { env: "EC_TARGET", label: "Most you will pay", def: 0.4, type: "number", help: "A probability. 0.4 means you buy at 40% or better." },
+      { env: "EC_SIZE", label: "Contracts per order", def: 5, type: "number" },
+      { env: "EC_MAX_POSITION", label: "Stop after (contracts)", def: 20, type: "number" },
+      { env: "EC_REFRESH_MS", label: "Re-check every (ms)", def: 15000, type: "number", advanced: true },
+    ],
+  },
+  {
+    kind: "ec",
+    id: "ec-laddering-bot",
+    name: "EC Ladder",
+    blurb: "A grid of resting orders each side of the mid, flattened before expiry.",
+    symbolEnv: "EC_UNDERLYING",
+    params: [
+      { env: "EC_UNDERLYING", label: "Underlying", def: "", type: "select", options: UNDERLYINGS },
+      { env: "GRID_LEVELS", label: "Rungs per side", def: 2, type: "number" },
+      { env: "GRID_SPACING", label: "Gap between rungs", def: 0.05, type: "number", help: "In probability. 0.05 is 5 points." },
+      { env: "GRID_SIZE", label: "Contracts per rung", def: 5, type: "number" },
+      { env: "GRID_MAX_INVENTORY", label: "Max net position", def: 20, type: "number" },
+      { env: "GRID_REFRESH_MS", label: "Refresh every (ms)", def: 10000, type: "number", advanced: true },
+    ],
+  },
+  {
+    kind: "ec",
+    id: "ec-settlement",
+    name: "EC Settlement",
+    blurb: "Not a trader: collects winnings from markets that already settled.",
+    symbolEnv: "EC_UNDERLYING",
+    params: [
+      { env: "CLAIM", label: "Sweep and exit", def: "1", type: "select", options: ["1", "0"], help: "1 sweeps every settled market and stops. 0 watches one to expiry instead." },
+      { env: "CLAIM_SCAN", label: "Markets to check", def: 25, type: "number" },
+      { env: "WATCH_POLL_MS", label: "Poll every (ms)", def: 15000, type: "number", advanced: true },
+    ],
   },
 ];
