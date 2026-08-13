@@ -29,15 +29,6 @@ export type Strategy = {
 // Markets. USDC.e:USDso is mainnet-only; the rest exist on both networks.
 export const MARKETS = ["SOMI:USDso", "WETH:USDso", "WBTC:USDso", "USDC.e:USDso"];
 
-// Event contracts are scoped to a VENUE, not a trading pair. One deployment
-// hosts several and the bots refuse to guess, so the generated .env carries the
-// id for the network you picked. These have moved before: if a bot reports no
-// markets, read venueId off a live market row.
-export const EC_VENUE: Record<"testnet" | "mainnet", string> = {
-  testnet: "0x679795a0195a1b76cdebb7c51d74e058aee92919b8c3389af86ef24535e8a28c",
-  mainnet: "0x458b30c2d72bfd2c6317304a4594ecbafe5f729d3111b65fdc3a33bd48e5432d",
-};
-
 // Which underlying to follow. Empty means "whatever the venue is running".
 const UNDERLYINGS = ["", "BTC", "ETH"];
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { STRATEGIES, EC_VENUE, type Strategy, type Param, type Kind } from "./strategies";
+import { STRATEGIES, type Strategy, type Param, type Kind } from "./strategies";
 
 const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
 const RAILWAY_TEMPLATE = "https://railway.com/deploy/pE6EIF";
@@ -280,14 +280,18 @@ function DeployStep(props: {
         paramLines.push(line);
       }
     }
+    // Event contracts are scoped to a venue, not a pair. We deliberately do not
+    // write the id: the kit reads it off the live market list, and only stops if
+    // markets span more than one venue, naming each. A hardcoded id here went
+    // stale three times in the first week of August and produced bots that found
+    // no markets and could not say why.
     const ec =
       strat.kind === "ec"
         ? [
             "",
-            "# Event contracts are scoped to a venue, not a pair. This is the one for",
-            "# the network above. If the bot reports no markets, the venue has moved:",
-            "# read venueId off a live market row.",
-            `VENUE_ID=${EC_VENUE[network as "testnet" | "mainnet"]}`,
+            "# Event contracts are scoped to a venue. The kit works it out from the",
+            "# live market list, so there is nothing to set. To pin one yourself,",
+            "# add VENUE_ID=0x... and it takes precedence.",
           ]
         : [];
     const lines = [
