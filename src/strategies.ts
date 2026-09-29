@@ -14,7 +14,9 @@ export type Param = {
 
 export type EnvDefault = { env: string; def: string; after?: string };
 
-export type Kind = "spot" | "ec";
+export type Issue = { block: boolean; msg: string };
+
+export type Kind = "spot" | "ec" | "perp";
 
 export type Strategy = {
   kind: Kind;
@@ -24,6 +26,10 @@ export type Strategy = {
   symbolEnv: string;
   params: Param[];
   envDefaults?: EnvDefault[]; // emitted in .env but not shown in the tune UI
+  // Problems with a config, checked as you tune. `block` is reserved for what
+  // the kit itself refuses at startup, with the same condition, so the builder
+  // never blocks a file the kit would run. Everything else is a warning.
+  check?: (v: Record<string, string>) => Issue | null;
 };
 
 // Markets. USDC.e:USDso is mainnet-only; the rest exist on both networks.
@@ -31,6 +37,17 @@ export const MARKETS = ["SOMI:USDso", "WETH:USDso", "WBTC:USDso", "USDC.e:USDso"
 
 // Which underlying to follow. Empty means "whatever the venue is running".
 const UNDERLYINGS = ["", "BTC", "ETH"];
+
+// Perp markets, in the app-canonical BASE-PERP form a trader reads off the
+// market header. Every one is live on testnet today; the testnet-only SW*
+// markets are left out because the app does not offer them. Perps exist on
+// testnet only, so there is no mainnet list.
+export const PERP_MARKETS = [
+  "BTC-PERP", "ETH-PERP", "SOL-PERP", "HYPE-PERP", "XRP-PERP", "BNB-PERP", "DOGE-PERP", "ADA-PERP",
+  "SUI-PERP", "LINK-PERP", "AVAX-PERP", "XLM-PERP", "NEAR-PERP", "WLD-PERP", "TAO-PERP",
+];
+
+const num = (v: Record<string, string>, k: string) => Number(v[k]);
 
 export const STRATEGIES: Strategy[] = [
   {
@@ -236,5 +253,97 @@ export const STRATEGIES: Strategy[] = [
       { env: "CLAIM_SCAN", label: "Markets to check", def: 25, type: "number" },
       { env: "WATCH_POLL_MS", label: "Poll every (ms)", def: 15000, type: "number", advanced: true },
     ],
+  },
+
+  // ── Perps ─────────────────────────────────────────────────────────────────
+  // Leveraged positions on a continuous book, margined from the MarginBank.
+  // Testnet only. The units are not uniform across the kit, so every help line
+  // says which one a field uses: take-profit, stop-loss and reduce size are
+  // PERCENT, funding thresholds are a FRACTION a year, and guard health is a
+  // MULTIPLE of the maintenance requirement.
+  {
+    kind: "perp",
+    id: "perp-starter",
+    name: "Perp Starter",
+    blurb: "One leveraged position with a take-profit and a stop-loss armed together.",
+    symbolEnv: "PERP_SYMBOL",
+    params: [
+      { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
+      { env: "PERP_SIDE", label: "Side", def: "long", type: "select", options: ["long", "short"] },
+      { env: "PERP_NOTIONAL_USDSO", label: "Position size (USDso)", def: 50, type: "number", help: "The position's value, not the margin. At 2x, 50 needs about 25 deposited." },
+      { env: "PERP_LEVERAGE", label: "Leverage", def: 2, type: "number", help: "Your own cap on this market. Each market has its own maximum on top." },
+      { env: "PERP_TAKE_PROFIT_PCT", label: "Take profit (%)", def: 2, type: "number", help: "In percent: 2 closes 2% away from the mark in your favour." },
+      { env: "PERP_STOP_LOSS_PCT", label: "Stop loss (%)", def: 1, type: "number", help: "In percent: 1 closes 1% away from the mark against you." },
+      { env: "PERP_TICK_MS", label: "Check position every (ms)", def: 10000, type: "number", advanced: true },
+      { env: "PERP_FLATTEN_ON_EXIT", label: "Close position on stop", def: "false", type: "select", options: ["false", "true"], advanced: true, help: "Stopping always cancels the bracket. true also closes the position." },
+    ],
+    check: (v) =>
+      num(v, "PERP_TAKE_PROFIT_PCT") > 0 && num(v, "PERP_STOP_LOSS_PCT") > 0
+        ? null
+        : { block: false, msg: "At zero a trigger sits on the mark itself and fires straight away." },
+  },
+  {
+    kind: "perp",
+    id: "perp-maker",
+    name: "Perp Market Maker",
+    blurb: "Rests a bid and an ask around the mark, leaning them back to flat.",
+    symbolEnv: "PERP_SYMBOL",
+    params: [
+      { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
+      { env: "PERP_MM_HALF_SPREAD_BPS", label: "Half-spread (bps)", def: 15, type: "number", help: "Distance of each quote from the mark." },
+      { env: "PERP_MM_NOTIONAL_USDSO", label: "Quote size (USDso)", def: 25, type: "number", help: "Position value per side, not margin." },
+      { env: "PERP_MM_MAX_POSITION_USDSO", label: "Max position (USDso)", def: 100, type: "number", help: "Past this it quotes only the side that unwinds." },
+      { env: "PERP_MM_INVENTORY_SKEW_BPS", label: "Inventory skew (bps)", def: 10, type: "number", help: "How hard to lean quotes to flatten inventory." },
+      { env: "PERP_MM_REQUOTE_TRIGGER_BPS", label: "Re-quote when mark moves (bps)", def: 8, type: "number", help: "Higher = fewer re-quotes = less gas." },
+      { env: "PERP_MM_LEVERAGE", label: "Leverage", def: 2, type: "number", advanced: true },
+      { env: "PERP_MM_REFRESH_MS", label: "Poll interval (ms)", def: 15000, type: "number", advanced: true },
+    ],
+    check: (v) =>
+      num(v, "PERP_MM_HALF_SPREAD_BPS") > 0
+        ? null
+        : { block: false, msg: "At zero or below the quotes cross the book, so every one is skipped and nothing rests." },
+  },
+  {
+    kind: "perp",
+    id: "perp-funding",
+    name: "Funding Carry",
+    blurb: "Holds whichever side funding pays, and steps aside when it stops paying.",
+    symbolEnv: "PERP_SYMBOL",
+    params: [
+      { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
+      { env: "PERP_FUNDING_MIN_APR", label: "Enter above (APR)", def: 0.1, type: "number", help: "A fraction a year: 0.1 is 10%. Either sign counts, it takes the side being paid." },
+      { env: "PERP_FUNDING_EXIT_APR", label: "Exit below (APR)", def: 0.03, type: "number", help: "A fraction a year: 0.03 is 3%. Has to sit below the entry." },
+      { env: "PERP_FUNDING_NOTIONAL_USDSO", label: "Position size (USDso)", def: 50, type: "number", help: "Position value, not margin." },
+      { env: "PERP_FUNDING_MAX_POSITION_USDSO", label: "Max position (USDso)", def: 200, type: "number", help: "Carry is fully exposed to price. This is what bounds it." },
+      { env: "PERP_FUNDING_LEVERAGE", label: "Leverage", def: 2, type: "number", advanced: true },
+      { env: "PERP_FUNDING_POLL_MS", label: "Check funding every (ms)", def: 60000, type: "number", advanced: true },
+    ],
+    check: (v) =>
+      num(v, "PERP_FUNDING_EXIT_APR") > num(v, "PERP_FUNDING_MIN_APR")
+        ? { block: true, msg: "The exit rate is above the entry rate, so the bot would open and close on alternate checks. The kit refuses to start like this." }
+        : null,
+  },
+  {
+    kind: "perp",
+    id: "perp-guard",
+    name: "Perp Risk Guard",
+    blurb: "Not a trader: reduces a position before liquidation reaches it.",
+    symbolEnv: "PERP_SYMBOL",
+    params: [
+      { env: "PERP_SYMBOL", label: "Market", def: "", type: "select", options: ["", ...PERP_MARKETS], help: "Leave blank to guard every market you hold a position in. Margin is shared, so blank is the safer choice." },
+      { env: "PERP_GUARD_REDUCE_BELOW", label: "Start reducing below", def: 1.5, type: "number", help: "Health as a multiple of maintenance margin. 1.0 is where liquidation starts, so 1.5 leaves half again as cushion." },
+      { env: "PERP_GUARD_REDUCE_PCT", label: "Reduce by (%)", def: 25, type: "number", help: "In percent: 25 closes a quarter of the position each time it trips." },
+      { env: "PERP_GUARD_FLATTEN_BELOW", label: "Close everything below", def: 1.15, type: "number", help: "Same health scale. Has to sit below the reduce level." },
+      { env: "PERP_GUARD_POLL_MS", label: "Check health every (ms)", def: 30000, type: "number", advanced: true },
+    ],
+    check: (v) => {
+      if (num(v, "PERP_GUARD_FLATTEN_BELOW") > num(v, "PERP_GUARD_REDUCE_BELOW")) {
+        return { block: true, msg: "The close-everything level is above the reduce level, so it would close before it ever reduced. The kit refuses to start like this." };
+      }
+      if (num(v, "PERP_GUARD_FLATTEN_BELOW") <= 1) {
+        return { block: false, msg: "Below 1.0 an account is already inside liquidation, so the guard would be acting at the same moment as the protocol. A level above 1 gives it room." };
+      }
+      return null;
+    },
   },
 ];

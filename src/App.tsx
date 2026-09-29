@@ -2,6 +2,12 @@ import { useMemo, useState } from "react";
 import { STRATEGIES, type Strategy, type Param, type Kind } from "./strategies";
 
 const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
+// Perp strategies are staged in their own repo until they move into the public
+// kit, and that repo is private. When they land in the public kit, point this
+// at KIT_REPO and the perp flow needs nothing else changed.
+const PERP_KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit-perp";
+const repoFor = (k: Kind) => (k === "perp" ? PERP_KIT_REPO : KIT_REPO);
+const folderOf = (repo: string) => repo.split("/").pop() ?? "dreamdex-bot-kit";
 const RAILWAY_TEMPLATE = "https://railway.com/deploy/pE6EIF";
 const DISCLAIMER_URL = `${KIT_REPO}/blob/main/DISCLAIMER.md`;
 const LEADERBOARD_URL = "https://leaderboard.dreamdex.io/";
@@ -21,6 +27,9 @@ export function App() {
 
   function pickStrategy(s: Strategy) {
     setStratId(s.id);
+    // Perp markets exist on testnet only, and the kit refuses NETWORK=mainnet
+    // for them, so the choice is made here rather than offered.
+    if (s.kind === "perp") setNetwork("testnet");
     const init: Record<string, string> = {};
     for (const p of s.params) init[p.env] = String(p.def);
     setValues(init);
@@ -67,6 +76,7 @@ export function App() {
 
         {step === 1 && strat && (
           <NetworkStep
+            testnetOnly={strat.kind === "perp"}
             network={network}
             setNetwork={setNetwork}
             dryRun={dryRun}
@@ -137,16 +147,19 @@ function StrategyStep(props: {
         <div className="toggle">
           <button className={kind === "spot" ? "on" : ""} onClick={() => setKind("spot")}>Spot</button>
           <button className={kind === "ec" ? "on" : ""} onClick={() => setKind("ec")}>Event contracts</button>
+          <button className={kind === "perp" ? "on" : ""} onClick={() => setKind("perp")}>Perps</button>
         </div>
         <div className="help">
           {kind === "spot"
             ? "Trading pairs on the DreamDEX order book."
-            : "Binary Up/Down markets on BTC and ETH price. Prices are probabilities, and each market expires on a schedule."}
+            : kind === "ec"
+              ? "Binary Up/Down markets on BTC and ETH price. Prices are probabilities, and each market expires on a schedule."
+              : "Leveraged long and short positions with no expiry, margined in USDso. Testnet only for now."}
         </div>
       </div>
 
       <p className="sub">
-        {kind === "spot" ? <>New here? Start with <b>Starter</b>.</> : <>New here? Start with <b>EC Starter</b>.</>}
+        New here? Start with <b>{kind === "spot" ? "Starter" : kind === "ec" ? "EC Starter" : "Perp Starter"}</b>.
       </p>
       <div className="cards">
         {shown.map((s) => (
@@ -161,6 +174,7 @@ function StrategyStep(props: {
 }
 
 function NetworkStep(props: {
+  testnetOnly: boolean;
   network: "testnet" | "mainnet";
   setNetwork: (n: "testnet" | "mainnet") => void;
   dryRun: boolean;
@@ -168,7 +182,7 @@ function NetworkStep(props: {
   onBack: () => void;
   onNext: () => void;
 }) {
-  const { network, setNetwork, dryRun, setDryRun, onBack, onNext } = props;
+  const { testnetOnly, network, setNetwork, dryRun, setDryRun, onBack, onNext } = props;
   return (
     <section>
       <h2>Network &amp; safety</h2>
@@ -178,8 +192,17 @@ function NetworkStep(props: {
         <label>Network</label>
         <div className="toggle">
           <button className={network === "testnet" ? "on" : ""} onClick={() => setNetwork("testnet")}>Testnet (practice)</button>
-          <button className={network === "mainnet" ? "on" : ""} onClick={() => setNetwork("mainnet")}>Mainnet (Algo Arena)</button>
+          <button
+            className={network === "mainnet" ? "on" : ""}
+            onClick={() => setNetwork("mainnet")}
+            disabled={testnetOnly}
+          >
+            Mainnet (Algo Arena)
+          </button>
         </div>
+        {testnetOnly && (
+          <div className="help">Perp markets are live on testnet only. The bot refuses to start on mainnet.</div>
+        )}
       </div>
 
       <div className="field">
@@ -216,6 +239,7 @@ function TuneStep(props: {
   const { strat, values, setVal, showAdvanced, setShowAdvanced, onBack, onNext } = props;
   const basic = strat.params.filter((p) => !p.advanced);
   const advanced = strat.params.filter((p) => p.advanced);
+  const issue = strat.check?.(values) ?? null;
   return (
     <section>
       <h2>Tune {strat.name}</h2>
@@ -238,7 +262,9 @@ function TuneStep(props: {
         </>
       )}
 
-      <Nav onBack={onBack} onNext={onNext} nextLabel="Get my bot →" />
+      {issue && <div className="warn">{issue.block ? "⛔ " : "⚠️ "}{issue.msg}</div>}
+
+      <Nav onBack={onBack} onNext={issue?.block ? undefined : onNext} nextLabel="Get my bot →" />
     </section>
   );
 }
@@ -267,6 +293,9 @@ function DeployStep(props: {
   onBack: () => void;
 }) {
   const { strat, network, dryRun, values, onBack } = props;
+  const perp = strat.kind === "perp";
+  const repo = repoFor(strat.kind);
+  const folder = folderOf(repo);
 
   const envFile = useMemo(() => {
     const paramLines = strat.params.map((p) => `${p.env}=${values[p.env]}`);
@@ -283,7 +312,7 @@ function DeployStep(props: {
     const lines = [
       "# DreamDEX bot config — generated by the Bot Builder",
       "# 1) Add your own funded key below. Never share it, never commit this file.",
-      "# 2) Save this as `.env` in the dreamdex-bot-kit folder.",
+      `# 2) Save this as \`.env\` in the ${folder} folder.`,
       "",
       `NETWORK=${network}`,
       `DRY_RUN=${dryRun}`,
@@ -294,13 +323,14 @@ function DeployStep(props: {
       "",
     ];
     return lines.join("\n");
-  }, [strat, network, dryRun, values]);
+  }, [strat, network, dryRun, values, folder]);
 
   const commands = [
-    `git clone ${KIT_REPO}`,
-    "cd dreamdex-bot-kit",
+    `git clone ${repo}`,
+    `cd ${folder}`,
     "npm install",
     "# save the .env above into this folder, then:",
+    ...(perp ? ["npm run perp:doctor   # checks gas, wallet USDso and margin first"] : []),
     `npm run dev -w ${strat.id}`,
   ].join("\n");
 
@@ -326,6 +356,21 @@ function DeployStep(props: {
         </div>
       </div>
 
+      {perp && (
+        <div className="block">
+          <div className="block-head"><span>Before the first run · fund the margin</span></div>
+          <ol className="steps">
+            <li>Get testnet <b>STT</b> for gas. {strat.id === "perp-starter" && <>The bracket also locks <b>0.30 STT</b> while it is armed, returned when it is cancelled.</>}</li>
+            <li>Get testnet <b>USDso</b>. It is a different token from the tUSDC the spot and event-contract faucet gives.</li>
+            <li>Deposit USDso into the <b>MarginBank</b>. A perp order locks from the bank, not your wallet, so an empty bank fails every order. The bot checks this at startup and stops with instructions if it is empty.</li>
+          </ol>
+          <div className="note">
+            <code>npm run perp:doctor</code> shows gas, wallet USDso and margin in one read, and sends nothing.
+          </div>
+        </div>
+      )}
+
+      {!perp && (
       <div className="block">
         <div className="block-head"><span>2 · Run it — Option A: 24/7 on Railway (easiest)</span></div>
         <p className="note" style={{ marginTop: 0 }}>
@@ -348,19 +393,27 @@ function DeployStep(props: {
           as soon as your variables are set.
         </div>
         <div className="note">
-          Prefer another always-on host (a VPS, Render)? Point it at <code>{KIT_REPO.replace("https://", "")}</code>,
+          Prefer another always-on host (a VPS, Render)? Point it at <code>{repo.replace("https://", "")}</code>,
           set the start command to <code>npm install &amp;&amp; npm start -w {strat.id}</code>, and add the same
           <code>.env</code> values as environment variables.
         </div>
       </div>
+      )}
 
       <div className="block">
         <div className="block-head">
-          <span>2 · Run it — Option B: on your machine (free)</span>
+          <span>2 · Run it{perp ? "" : " — Option B"}: on your machine (free)</span>
           <CopyBtn text={commands} />
         </div>
         <pre>{commands}</pre>
         <div className="note">An AI coding agent (Claude Code, Cursor) can run these steps for you.</div>
+        {perp && (
+          <div className="note">
+            The one-click Railway template runs the public kit, which does not have the perp strategies yet, so perps
+            run on your machine or any host you point at the repo above. The perp strategies are in staging, and that
+            repo is not public yet.
+          </div>
+        )}
       </div>
 
       <div className="block legal-block">
@@ -372,11 +425,13 @@ function DeployStep(props: {
         <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Full legal disclaimer →</a>
       </div>
 
+      {!perp && (
       <div className="block finish">
         <b>Then compete:</b> once you're live on mainnet, register at{" "}
         <a href="https://leaderboard.dreamdex.io" target="_blank" rel="noreferrer">leaderboard.dreamdex.io</a>{" "}
         and click <b>Link Algo Wallet</b> for your bot's address, or your volume won't count.
       </div>
+      )}
 
       <Nav onBack={onBack} />
     </section>
