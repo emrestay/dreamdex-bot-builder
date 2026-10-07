@@ -49,6 +49,26 @@ export const PERP_MARKETS = [
 
 const num = (v: Record<string, string>, k: string) => Number(v[k]);
 
+// The DreamDEX account a perp bot trades through a linked trading key. Blank
+// means the bot trades its own key's perps account instead.
+const OWNER: Param = {
+  env: "OWNER_ADDRESS",
+  label: "Your DreamDEX account",
+  def: "",
+  type: "text",
+  help: "The account you link the bot to in the app. Leave blank to trade the bot key's own account.",
+};
+
+// The kit refuses an OWNER_ADDRESS that is not an address, so this blocks the
+// same way; the strategy's own check runs after it.
+const withOwner = (check?: Strategy["check"]): Strategy["check"] => (v) => {
+  const owner = (v.OWNER_ADDRESS ?? "").trim();
+  if (owner && !/^0x[0-9a-fA-F]{40}$/.test(owner)) {
+    return { block: true, msg: "Your DreamDEX account has to be a full address: 0x and 40 characters. The kit refuses anything else." };
+  }
+  return check?.(v) ?? null;
+};
+
 export const STRATEGIES: Strategy[] = [
   {
     kind: "spot",
@@ -257,7 +277,7 @@ export const STRATEGIES: Strategy[] = [
 
   // ── Perps ─────────────────────────────────────────────────────────────────
   // Leveraged positions on a continuous book, margined from the MarginBank.
-  // Testnet only. The units are not uniform across the kit, so every help line
+  // Hideki testnet only. The units are not uniform across the kit, so every help line
   // says which one a field uses: take-profit, stop-loss and reduce size are
   // PERCENT, funding thresholds are a FRACTION a year, and guard health is a
   // MULTIPLE of the maintenance requirement.
@@ -268,6 +288,7 @@ export const STRATEGIES: Strategy[] = [
     blurb: "One leveraged position with a take-profit and a stop-loss armed together.",
     symbolEnv: "PERP_SYMBOL",
     params: [
+      OWNER,
       { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
       { env: "PERP_SIDE", label: "Side", def: "long", type: "select", options: ["long", "short"] },
       { env: "PERP_NOTIONAL_USDSO", label: "Position size (USDso)", def: 50, type: "number", help: "The position's value, not the margin. At 2x, 50 needs about 25 deposited." },
@@ -277,10 +298,10 @@ export const STRATEGIES: Strategy[] = [
       { env: "PERP_TICK_MS", label: "Check position every (ms)", def: 10000, type: "number", advanced: true },
       { env: "PERP_FLATTEN_ON_EXIT", label: "Close position on stop", def: "false", type: "select", options: ["false", "true"], advanced: true, help: "Stopping always cancels the bracket. true also closes the position." },
     ],
-    check: (v) =>
+    check: withOwner((v) =>
       num(v, "PERP_TAKE_PROFIT_PCT") > 0 && num(v, "PERP_STOP_LOSS_PCT") > 0
         ? null
-        : { block: false, msg: "At zero a trigger sits on the mark itself and fires straight away." },
+        : { block: false, msg: "At zero a trigger sits on the mark itself and fires straight away." }),
   },
   {
     kind: "perp",
@@ -289,6 +310,7 @@ export const STRATEGIES: Strategy[] = [
     blurb: "Rests a bid and an ask around the mark, leaning them back to flat.",
     symbolEnv: "PERP_SYMBOL",
     params: [
+      OWNER,
       { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
       { env: "PERP_MM_HALF_SPREAD_BPS", label: "Half-spread (bps)", def: 15, type: "number", help: "Distance of each quote from the mark." },
       { env: "PERP_MM_NOTIONAL_USDSO", label: "Quote size (USDso)", def: 25, type: "number", help: "Position value per side, not margin." },
@@ -298,10 +320,10 @@ export const STRATEGIES: Strategy[] = [
       { env: "PERP_MM_LEVERAGE", label: "Leverage", def: 2, type: "number", advanced: true },
       { env: "PERP_MM_REFRESH_MS", label: "Poll interval (ms)", def: 15000, type: "number", advanced: true },
     ],
-    check: (v) =>
+    check: withOwner((v) =>
       num(v, "PERP_MM_HALF_SPREAD_BPS") > 0
         ? null
-        : { block: false, msg: "At zero or below the quotes cross the book, so every one is skipped and nothing rests." },
+        : { block: false, msg: "At zero or below the quotes cross the book, so every one is skipped and nothing rests." }),
   },
   {
     kind: "perp",
@@ -310,6 +332,7 @@ export const STRATEGIES: Strategy[] = [
     blurb: "Holds whichever side funding pays, and steps aside when it stops paying.",
     symbolEnv: "PERP_SYMBOL",
     params: [
+      OWNER,
       { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
       { env: "PERP_FUNDING_MIN_APR", label: "Enter above (APR)", def: 0.1, type: "number", help: "A fraction a year: 0.1 is 10%. Either sign counts, it takes the side being paid." },
       { env: "PERP_FUNDING_EXIT_APR", label: "Exit below (APR)", def: 0.03, type: "number", help: "A fraction a year: 0.03 is 3%. Has to sit below the entry." },
@@ -318,10 +341,10 @@ export const STRATEGIES: Strategy[] = [
       { env: "PERP_FUNDING_LEVERAGE", label: "Leverage", def: 2, type: "number", advanced: true },
       { env: "PERP_FUNDING_POLL_MS", label: "Check funding every (ms)", def: 60000, type: "number", advanced: true },
     ],
-    check: (v) =>
+    check: withOwner((v) =>
       num(v, "PERP_FUNDING_EXIT_APR") > num(v, "PERP_FUNDING_MIN_APR")
         ? { block: true, msg: "The exit rate is above the entry rate, so the bot would open and close on alternate checks. The kit refuses to start like this." }
-        : null,
+        : null),
   },
   {
     kind: "perp",
@@ -330,13 +353,14 @@ export const STRATEGIES: Strategy[] = [
     blurb: "Not a trader: reduces a position before liquidation reaches it.",
     symbolEnv: "PERP_SYMBOL",
     params: [
+      OWNER,
       { env: "PERP_SYMBOL", label: "Market", def: "", type: "select", options: ["", ...PERP_MARKETS], help: "Leave blank to guard every market you hold a position in. Margin is shared, so blank is the safer choice." },
       { env: "PERP_GUARD_REDUCE_BELOW", label: "Start reducing below", def: 1.5, type: "number", help: "Health as a multiple of maintenance margin. 1.0 is where liquidation starts, so 1.5 leaves half again as cushion." },
       { env: "PERP_GUARD_REDUCE_PCT", label: "Reduce by (%)", def: 25, type: "number", help: "In percent: 25 closes a quarter of the position each time it trips." },
       { env: "PERP_GUARD_FLATTEN_BELOW", label: "Close everything below", def: 1.15, type: "number", help: "Same health scale. Has to sit below the reduce level." },
       { env: "PERP_GUARD_POLL_MS", label: "Check health every (ms)", def: 30000, type: "number", advanced: true },
     ],
-    check: (v) => {
+    check: withOwner((v) => {
       if (num(v, "PERP_GUARD_FLATTEN_BELOW") > num(v, "PERP_GUARD_REDUCE_BELOW")) {
         return { block: true, msg: "The close-everything level is above the reduce level, so it would close before it ever reduced. The kit refuses to start like this." };
       }
@@ -344,6 +368,6 @@ export const STRATEGIES: Strategy[] = [
         return { block: false, msg: "Below 1.0 an account is already inside liquidation, so the guard would be acting at the same moment as the protocol. A level above 1 gives it room." };
       }
       return null;
-    },
+    }),
   },
 ];
