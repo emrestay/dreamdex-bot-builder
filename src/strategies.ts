@@ -53,7 +53,7 @@ const num = (v: Record<string, string>, k: string) => Number(v[k]);
 // means the bot trades its own key's perps account instead.
 const OWNER: Param = {
   env: "OWNER_ADDRESS",
-  label: "Your DreamDEX account",
+  label: "DreamDEX account wallet address",
   def: "",
   type: "text",
   help: "The account you link the bot to in the app. Leave blank to trade the bot key's own account.",
@@ -64,7 +64,7 @@ const OWNER: Param = {
 const withOwner = (check?: Strategy["check"]): Strategy["check"] => (v) => {
   const owner = (v.OWNER_ADDRESS ?? "").trim();
   if (owner && !/^0x[0-9a-fA-F]{40}$/.test(owner)) {
-    return { block: true, msg: "Your DreamDEX account has to be a full address: 0x and 40 characters. The kit refuses anything else." };
+    return { block: true, msg: "The DreamDEX account wallet address has to be a full address: 0x and 40 characters. The kit refuses anything else." };
   }
   return check?.(v) ?? null;
 };

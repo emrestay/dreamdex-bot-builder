@@ -409,7 +409,7 @@ function DeployStep(props: {
           <ol className="steps">
             <li>
               With no DreamDEX account set, the bot trades its own key's perps account. Fill in{" "}
-              <b>Your DreamDEX account</b> on the previous step to trade your app account through a linked bot instead.
+              <b>DreamDEX account wallet address</b> on the previous step to trade your app account through a linked bot instead.
             </li>
             <li>Get Hideki testnet <b>STT</b> for gas. {strat.id === "perp-starter" && <>The bracket also locks <b>0.30 STT</b> while it is armed, returned when it is cancelled.</>}</li>
             <li>Deposit USDso into the bot key's <b>MarginBank</b>. A perp order locks from the bank, not your wallet, so an empty bank fails every order. The bot checks this at startup and stops with instructions if it is empty.</li>

@@ -208,7 +208,7 @@ Testnet only: perps run on **Hideki** (chain 50383), the network
 flowchart TD
   A([Perps tab]) --> B[1 · Choose strategy<br/>Perp Starter · Perp Market Maker · Funding Carry · Perp Risk Guard]
   B --> N[2 · Network & safety<br/>Hideki testnet only, mainnet disabled<br/>dry-run or live]
-  N --> T[3 · Tune<br/>Your DreamDEX account + strategy params]
+  N --> T[3 · Tune<br/>DreamDEX account wallet address + strategy params]
   T --> C{Account filled in?}
   C -->|yes: trading key| K[4 · Deploy<br/>.env with NETWORK=hideki + OWNER_ADDRESS<br/>steps: bot key, Link a bot, Perps ⇆ Spot]
   C -->|no: the key's own account| O[4 · Deploy<br/>.env with NETWORK=hideki<br/>steps: STT gas, USDso in the key's MarginBank]
@@ -229,7 +229,7 @@ flowchart TD
 
 ### The trading-key flow (recommended)
 
-1. The user fills **Your DreamDEX account** (`OWNER_ADDRESS`). Inside the app
+1. The user fills **DreamDEX account wallet address** (`OWNER_ADDRESS`). Inside the app
    this can be prefilled from the connected account.
 2. Deploy shows three steps before the run commands:
    1. Make a new key just for the bot (for example `cast wallet new`) and put it
@@ -264,7 +264,7 @@ DRY_RUN=<true|false>
 STRATEGY=<perp-starter|perp-maker|perp-funding|perp-guard>
 PRIVATE_KEY=0x...
 
-OWNER_ADDRESS=<the user's DreamDEX account>
+OWNER_ADDRESS=<the user's DreamDEX account wallet address>
 PERP_SYMBOL=<market>
 <...every other param>=<value>
 ```
@@ -316,7 +316,7 @@ One leveraged position, closed at a take-profit or a stop-loss.
 
 | Param (env) | Label | Default | Tier |
 | --- | --- | --- | --- |
-| `OWNER_ADDRESS` | Your DreamDEX account | blank | basic |
+| `OWNER_ADDRESS` | DreamDEX account wallet address | blank | basic |
 | `PERP_SYMBOL` | Market | `BTC-PERP` | basic |
 | `PERP_SIDE` | Side (`long` / `short`) | `long` | basic |
 | `PERP_NOTIONAL_USDSO` | Position size (USDso) | `50` | basic |
@@ -331,7 +331,7 @@ A bid and an ask around the mark, leaned back to flat.
 
 | Param (env) | Label | Default | Tier |
 | --- | --- | --- | --- |
-| `OWNER_ADDRESS` | Your DreamDEX account | blank | basic |
+| `OWNER_ADDRESS` | DreamDEX account wallet address | blank | basic |
 | `PERP_SYMBOL` | Market | `BTC-PERP` | basic |
 | `PERP_MM_HALF_SPREAD_BPS` | Half-spread (bps) | `15` | basic |
 | `PERP_MM_NOTIONAL_USDSO` | Quote size (USDso) | `25` | basic |
@@ -346,7 +346,7 @@ Holds whichever side funding pays, and steps aside when it stops paying.
 
 | Param (env) | Label | Default | Tier |
 | --- | --- | --- | --- |
-| `OWNER_ADDRESS` | Your DreamDEX account | blank | basic |
+| `OWNER_ADDRESS` | DreamDEX account wallet address | blank | basic |
 | `PERP_SYMBOL` | Market | `BTC-PERP` | basic |
 | `PERP_FUNDING_MIN_APR` | Enter above (APR) | `0.1` | basic |
 | `PERP_FUNDING_EXIT_APR` | Exit below (APR) | `0.03` | basic |
@@ -360,7 +360,7 @@ Not a trader: reduces a position before liquidation reaches it.
 
 | Param (env) | Label | Default | Tier |
 | --- | --- | --- | --- |
-| `OWNER_ADDRESS` | Your DreamDEX account | blank | basic |
+| `OWNER_ADDRESS` | DreamDEX account wallet address | blank | basic |
 | `PERP_SYMBOL` | Market | blank (every market held) | basic |
 | `PERP_GUARD_REDUCE_BELOW` | Start reducing below | `1.5` | basic |
 | `PERP_GUARD_REDUCE_PCT` | Reduce by (%) | `25` | basic |
