@@ -12,6 +12,7 @@ machine or your own cloud. The bot runs on your infrastructure, not ours.
 ## What it does
 
 1. **Strategy** — choose from the kit's strategies (Starter, Market Maker, Grid, Momentum, Mean Reversion, TWAP, Ensemble).
+   Event contracts and Perps (Hideki testnet) have their own tabs; perps are covered in [FLOW.md](FLOW.md#perps-hideki-testnet).
 2. **Network & safety** — testnet/mainnet, dry-run/live, with the right warnings.
 3. **Tune** — friendly labels over the strategy's real env parameters (defaults match the kit).
 4. **Deploy** — a generated `.env` (copy/download), local run commands, and a "Deploy to your own cloud" option.

@@ -292,11 +292,11 @@ export const STRATEGIES: Strategy[] = [
       { env: "PERP_SYMBOL", label: "Market", def: "BTC-PERP", type: "select", options: PERP_MARKETS },
       { env: "PERP_SIDE", label: "Side", def: "long", type: "select", options: ["long", "short"] },
       { env: "PERP_NOTIONAL_USDSO", label: "Position size (USDso)", def: 50, type: "number", help: "The position's value, not the margin. At 2x, 50 needs about 25 deposited." },
-      { env: "PERP_LEVERAGE", label: "Leverage", def: 2, type: "number", help: "Your own cap on this market. Each market has its own maximum on top." },
+      { env: "PERP_LEVERAGE", label: "Leverage", def: 2, type: "number", help: "Your own cap on this market. Each market has its own maximum on top. With a linked bot, set it in the app: the bot cannot change your account's leverage." },
       { env: "PERP_TAKE_PROFIT_PCT", label: "Take profit (%)", def: 2, type: "number", help: "In percent: 2 closes 2% away from the mark in your favour." },
       { env: "PERP_STOP_LOSS_PCT", label: "Stop loss (%)", def: 1, type: "number", help: "In percent: 1 closes 1% away from the mark against you." },
       { env: "PERP_TICK_MS", label: "Check position every (ms)", def: 10000, type: "number", advanced: true },
-      { env: "PERP_FLATTEN_ON_EXIT", label: "Close position on stop", def: "false", type: "select", options: ["false", "true"], advanced: true, help: "Stopping always cancels the bracket. true also closes the position." },
+      { env: "PERP_FLATTEN_ON_EXIT", label: "Close position on stop", def: "false", type: "select", options: ["false", "true"], advanced: true, help: "true closes the position when you stop the bot. With a linked bot the take-profit and stop-loss only act while it runs, so a stopped bot leaves the position unguarded." },
     ],
     check: withOwner((v) =>
       num(v, "PERP_TAKE_PROFIT_PCT") > 0 && num(v, "PERP_STOP_LOSS_PCT") > 0

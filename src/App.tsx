@@ -5,6 +5,7 @@ const KIT_REPO = "https://github.com/somnia-chain/dreamdex-bot-kit";
 const KIT_FOLDER = "dreamdex-bot-kit";
 // Perps run on the Hideki testnet, the network the testnet app trades on.
 const TESTNET_APP_URL = "https://app.testnet.dreamdex.io";
+const PERPS_ARENA_URL = `${TESTNET_APP_URL}/competition`;
 const RAILWAY_TEMPLATE = "https://railway.com/deploy/pE6EIF";
 const DISCLAIMER_URL = `${KIT_REPO}/blob/main/DISCLAIMER.md`;
 const LEADERBOARD_URL = "https://leaderboard.dreamdex.io/";
@@ -44,12 +45,21 @@ export function App() {
         <div className="tag">Pick a strategy, tune it, deploy. No coding.</div>
       </header>
 
-      <a className="arena" href={LEADERBOARD_URL} target="_blank" rel="noreferrer">
-        <span className="arena-l">
-          🏟️ <b>Competing in Algo Arena?</b> Register your wallet on the leaderboard so your bot's volume counts.
-        </span>
-        <span className="arena-cta">Join Algo Arena →</span>
-      </a>
+      {kind === "perp" ? (
+        <a className="arena" href={PERPS_ARENA_URL} target="_blank" rel="noreferrer">
+          <span className="arena-l">
+            🏟️ <b>Trading in Perps Arena?</b> Join with the same DreamDEX account your bot trades for.
+          </span>
+          <span className="arena-cta">Join Perps Arena →</span>
+        </a>
+      ) : (
+        <a className="arena" href={LEADERBOARD_URL} target="_blank" rel="noreferrer">
+          <span className="arena-l">
+            🏟️ <b>Competing in Algo Arena?</b> Register your wallet on the leaderboard so your bot's volume counts.
+          </span>
+          <span className="arena-cta">Join Algo Arena →</span>
+        </a>
+      )}
 
       <div className="safebar">
         🔒 Your key <b>never touches this site</b>. Not financial advice, you trade at your own risk.{" "}
@@ -188,7 +198,9 @@ function NetworkStep(props: {
       <div className="field">
         <label>Network</label>
         <div className="toggle">
-          <button className={network === "testnet" ? "on" : ""} onClick={() => setNetwork("testnet")}>Testnet (practice)</button>
+          <button className={network === "testnet" ? "on" : ""} onClick={() => setNetwork("testnet")}>
+            {testnetOnly ? "Hideki testnet (practice)" : "Testnet (practice)"}
+          </button>
           <button
             className={network === "mainnet" ? "on" : ""}
             onClick={() => setNetwork("mainnet")}
@@ -453,6 +465,14 @@ function DeployStep(props: {
         trade what you can afford to lose.{" "}
         <a href={DISCLAIMER_URL} target="_blank" rel="noreferrer">Full legal disclaimer →</a>
       </div>
+
+      {perp && (
+      <div className="block finish">
+        <b>Then compete:</b> join{" "}
+        <a href={PERPS_ARENA_URL} target="_blank" rel="noreferrer">Perps Arena</a> with the same DreamDEX
+        account{owner ? <> (<code>{owner.slice(0, 6)}…{owner.slice(-4)}</code>)</> : null} your bot trades for.
+      </div>
+      )}
 
       {!perp && (
       <div className="block finish">
